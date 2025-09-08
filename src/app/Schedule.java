@@ -33,4 +33,8 @@ public class Schedule implements Serializable {
     public Map<String, List<Shift>> getAllNurseShifts() {
         return nurseShifts;
     }
+
+    public Map<DayOfWeek, Boolean> getDoctorAvailability() {
+        return new EnumMap<>(doctorDaily);
+    }
 }
