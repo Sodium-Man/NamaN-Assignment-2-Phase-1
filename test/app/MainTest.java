@@ -7,6 +7,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
@@ -55,12 +57,12 @@ public class MainTest {
         try {
             Main.main(new String[]{});
         } catch (NoSuchElementException e) {
-            // Expected when scanner closes
+            // Expected
         }
 
         String output = outContent.toString();
-        assertTrue("Should display menu options", output.contains("Resident HealthCare System"));
-        assertTrue("Should handle list beds command", output.contains("Choice:"));
+        assertTrue(output.contains("Resident HealthCare System"));
+        assertTrue(output.contains("Choice:"));
     }
 
     @Test
@@ -71,12 +73,12 @@ public class MainTest {
         try {
             Main.main(new String[]{});
         } catch (NoSuchElementException e) {
-            // Expected when scanner closes
+            // Expected
         }
 
         String output = outContent.toString();
-        assertTrue("Should process add resident", output.contains("Name:"));
-        assertTrue("Should ask for gender", output.contains("Gender"));
+        assertTrue(output.contains("Name:"));
+        assertTrue(output.contains("Gender"));
     }
 
     @Test
@@ -87,11 +89,11 @@ public class MainTest {
         try {
             Main.main(new String[]{});
         } catch (NoSuchElementException e) {
-            // Expected when scanner closes
+            // Expected
         }
 
         String output = outContent.toString();
-        assertTrue("Should display goodbye message", output.contains("Goodbye"));
+        assertTrue(output.contains("Goodbye"));
     }
 
     @Test
@@ -102,11 +104,11 @@ public class MainTest {
         try {
             Main.main(new String[]{});
         } catch (NoSuchElementException e) {
-            // Expected when scanner closes
+            // Expected
         }
 
         String output = outContent.toString();
-        assertTrue("Should handle invalid choice", output.contains("Invalid choice"));
+        assertTrue(output.contains("Invalid choice"));
     }
 
     @Test
@@ -117,11 +119,11 @@ public class MainTest {
         try {
             Main.main(new String[]{});
         } catch (NoSuchElementException e) {
-            // Expected when scanner closes
+            // Expected
         }
 
         String output = outContent.toString();
-        assertTrue("Should process save/load commands", output.contains("Saved") || output.contains("Loaded") || output.contains("Goodbye"));
+        assertTrue(output.contains("✓ Data successfully saved") || output.contains("✓ Data successfully loaded") || output.contains("Goodbye"));
     }
 
     @Test
@@ -132,11 +134,11 @@ public class MainTest {
         try {
             Main.main(new String[]{});
         } catch (NoSuchElementException e) {
-            // Expected when scanner closes
+            // Expected
         }
 
         String output = outContent.toString();
-        assertTrue("Should process compliance check", output.contains("Compliance") || output.contains("Goodbye"));
+        assertTrue(output.contains("Compliance") || output.contains("Goodbye"));
     }
 
     @Test
@@ -144,8 +146,8 @@ public class MainTest {
         CareHome instance1 = CareHome.getInstance();
         CareHome instance2 = CareHome.getInstance();
 
-        assertSame("Should return the same instance", instance1, instance2);
-        assertNotNull("Instance should not be null", instance1);
+        assertSame(instance1, instance2);
+        assertNotNull(instance1);
     }
 
     @Test
@@ -154,8 +156,8 @@ public class MainTest {
         Manager manager = new Manager("M1", "Test Manager", Gender.M, "test", "pass");
 
         ch.addStaff(manager);
-        assertEquals("Should have one staff member", 1, ch.getStaff().size());
-        assertEquals("Staff ID should match", "M1", ch.getStaff().get(0).getStaffId());
+        assertEquals(1, ch.getStaff().size());
+        assertEquals("M1", ch.getStaff().get(0).getStaffId());
     }
 
     @Test
@@ -164,8 +166,8 @@ public class MainTest {
         Resident resident = new Resident("R1", "Test Resident", Gender.M, "Test Condition");
 
         ch.addResident(resident);
-        assertEquals("Should have one resident", 1, ch.getResidents().size());
-        assertEquals("Resident ID should match", "R1", ch.getResidents().get(0).getResidentId());
+        assertEquals(1, ch.getResidents().size());
+        assertEquals("R1", ch.getResidents().get(0).getResidentId());
     }
 
     @Test
@@ -173,8 +175,8 @@ public class MainTest {
         CareHome ch = CareHome.getInstance();
         ch.log("TEST123", "Test action");
 
-        assertEquals("Should have one log entry", 1, ch.getLogs().size());
-        assertTrue("Log should contain staff ID", ch.getLogs().get(0).toString().contains("TEST123"));
+        assertEquals(1, ch.getLogs().size());
+        assertTrue(ch.getLogs().get(0).toString().contains("TEST123"));
     }
 
     @Test
@@ -182,9 +184,9 @@ public class MainTest {
         CareHome ch = CareHome.getInstance();
 
         SampleData.bootstrapBeds(ch);
-        assertFalse("Should have wards after bootstrap", ch.getWards().isEmpty());
-        assertFalse("Should have rooms after bootstrap", ch.getWards().get(0).getRooms().isEmpty());
-        assertFalse("Should have beds after bootstrap", ch.getWards().get(0).getRooms().get(0).getBeds().isEmpty());
+        assertFalse(ch.getWards().isEmpty());
+        assertFalse(ch.getWards().get(0).getRooms().isEmpty());
+        assertFalse(ch.getWards().get(0).getRooms().get(0).getBeds().isEmpty());
     }
 
     @Test
@@ -192,8 +194,8 @@ public class MainTest {
         CareHome ch = CareHome.getInstance();
 
         SampleData.bootstrapPeople(ch);
-        assertFalse("Should have staff after bootstrap", ch.getStaff().isEmpty());
-        assertFalse("Should have residents after bootstrap", ch.getResidents().isEmpty());
+        assertFalse(ch.getStaff().isEmpty());
+        assertFalse(ch.getResidents().isEmpty());
     }
 
     @Test
@@ -202,13 +204,11 @@ public class MainTest {
             File testFile = tempFolder.newFile("test.dat");
             CareHome ch = CareHome.getInstance();
 
-            // Test save
             ch.saveData(testFile);
-            assertTrue("File should exist after save", testFile.exists());
+            assertTrue(testFile.exists());
 
-            // Test load
             CareHome loaded = CareHome.loadData(testFile);
-            assertNotNull("Loaded instance should not be null", loaded);
+            assertNotNull(loaded);
 
         } catch (Exception e) {
             fail("File operations should not fail: " + e.getMessage());
@@ -217,25 +217,24 @@ public class MainTest {
 
     @Test
     public void testGenderEnum() {
-        assertEquals("M should represent Male", Gender.M, Gender.valueOf("M"));
-        assertEquals("F should represent Female", Gender.F, Gender.valueOf("F"));
+        assertEquals(Gender.M, Gender.valueOf("M"));
+        assertEquals(Gender.F, Gender.valueOf("F"));
 
-        // Test string parsing
         Gender male = "M".startsWith("M") ? Gender.M : Gender.F;
         Gender female = "F".startsWith("M") ? Gender.M : Gender.F;
 
-        assertEquals("Should parse M as Male", Gender.M, male);
-        assertEquals("Should parse F as Female", Gender.F, female);
+        assertEquals(Gender.M, male);
+        assertEquals(Gender.F, female);
     }
 
     @Test
     public void testResidentCreation() {
         Resident resident = new Resident("R1", "John Doe", Gender.M, "Diabetes");
 
-        assertEquals("ID should match", "R1", resident.getResidentId());
-        assertEquals("Name should match", "John Doe", resident.getName());
-        assertEquals("Gender should match", Gender.M, resident.getGender());
-        assertEquals("Condition should match", "Diabetes", resident.getMedicalCondition());
+        assertEquals("R1", resident.getResidentId());
+        assertEquals("John Doe", resident.getName());
+        assertEquals(Gender.M, resident.getGender());
+        assertEquals("Diabetes", resident.getMedicalCondition());
     }
 
     @Test
@@ -244,8 +243,44 @@ public class MainTest {
         Nurse nurse = new Nurse("N1", "Nurse", Gender.F, "user", "pass");
         Doctor doctor = new Doctor("D1", "Doctor", Gender.M, "user", "pass");
 
-        assertEquals("Manager should have correct role", Role.MANAGER, manager.getRole());
-        assertEquals("Nurse should have correct role", Role.NURSE, nurse.getRole());
-        assertEquals("Doctor should have correct role", Role.DOCTOR, doctor.getRole());
+        assertEquals(Role.MANAGER, manager.getRole());
+        assertEquals(Role.NURSE, nurse.getRole());
+        assertEquals(Role.DOCTOR, doctor.getRole());
+    }
+
+    @Test
+    public void testPrescriptionAddItem() {
+        Prescription prescription = new Prescription("R1");
+        Medicine med = new Medicine("Aspirin");
+        prescription.addItem(med, "1 tablet", LocalTime.of(9, 0));
+
+        assertTrue(prescription.toString().contains("Aspirin"));
+        assertTrue(prescription.getItems().containsKey(med));
+    }
+
+    @Test
+    public void testBedVacancy() throws Exception {
+        Bed bed = new Bed("B1");
+        assertTrue(bed.isVacant());
+
+        Resident r = new Resident("R1", "Test", Gender.M, null);
+        bed.assignResident(r);
+        assertFalse(bed.isVacant());
+
+        bed.removeResident();
+        assertTrue(bed.isVacant());
+    }
+
+    @Test
+    public void testScheduleComplianceViolation() {
+        CareHome ch = CareHome.getInstance();
+        Nurse nurse = new Nurse("N1", "Nurse", Gender.F, "user", "pass");
+        ch.addStaff(nurse);
+
+        Shift shift1 = new Shift(DayOfWeek.MONDAY, LocalTime.of(8,0), LocalTime.of(20,0)); // 12h shift
+        ch.getSchedule().assignNurseShift(nurse, shift1);
+
+        Exception ex = assertThrows(Exception.class, ch::checkCompliance);
+        assertTrue(ex.getMessage().contains("Compliance violation"));
     }
 }
