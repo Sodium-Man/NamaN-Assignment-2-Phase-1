@@ -2,61 +2,66 @@ package app;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
-import java.util.List;
 
 public class SampleData {
-    public static void bootstrapBeds(CareHome ch) {
-        // Two wards, each with 6 rooms and 1-4 beds
-        for (int w = 1; w <= 2; w++) {
-            Ward ward = new Ward("W" + w, "Ward-" + w); // Added ward name parameter
-            for (int r = 1; r <= 6; r++) {
-                Room room = new Room("W" + w + "R" + r);
-                int beds = 1 + (r % 4);
-                for (int b = 1; b <= beds; b++) {
-                    room.getBeds().add(new Bed(room.getRoomId() + "B" + b));
-                }
-                ward.addRoom(room); // Use addRoom method instead of getRooms().add()
-            }
-            ch.addWard(ward); // Use addWard method instead of getWards().add()
-        }
+
+    // Bootstrap wards, rooms, beds
+    public static void bootstrapBeds(CareHome careHome) {
+        Ward ward1 = new Ward("W1", "General Ward");
+
+        Room room1 = new Room("R1");
+        Room room2 = new Room("R2");
+
+        // Add beds to rooms
+        room1.getBeds().add(new Bed("B1"));
+        room1.getBeds().add(new Bed("B2"));
+        room2.getBeds().add(new Bed("B3"));
+        room2.getBeds().add(new Bed("B4"));
+
+        // Add rooms to ward
+        ward1.getRooms().add(room1);
+        ward1.getRooms().add(room2);
+
+        careHome.addWard(ward1);
     }
 
-    public static void bootstrapPeople(CareHome ch) {
-        // Manager
-        ch.addStaff(new Manager("M1", "Manager Mary", Gender.F, "mary", "pass"));
-        // Nurses
-        ch.addStaff(new Nurse("N1", "Nurse Nina", Gender.F, "nina", "pass"));
-        ch.addStaff(new Nurse("N2", "Nurse Noel", Gender.M, "noel", "pass"));
-        // Doctor
-        ch.addStaff(new Doctor("D1", "Doctor Dan", Gender.M, "dan", "pass"));
+    // Bootstrap sample staff and residents
+    public static void bootstrapPeople(CareHome careHome) {
+        // Staff
+        Manager manager = new Manager("M1", "Alice", Gender.F, "alice", "pass");
+        Nurse nurse = new Nurse("N1", "Bob", Gender.M, "bob", "pass");
+        Doctor doctor = new Doctor("D1", "Charlie", Gender.M, "charlie", "pass");
+
+        careHome.addStaff(manager);
+        careHome.addStaff(nurse);
+        careHome.addStaff(doctor);
 
         // Residents
-        ch.addResident(new Resident("R1", "Alice", Gender.F, "Diabetes"));
-        ch.addResident(new Resident("R2", "Bob", Gender.M, "Asthma"));
+        Resident res1 = new Resident("R1", "John Doe", Gender.M, "Hypertension");
+        Resident res2 = new Resident("R2", "Jane Smith", Gender.F, "Diabetes");
+
+        careHome.addResident(res1);
+        careHome.addResident(res2);
     }
 
-    public static void bootstrapSchedule(CareHome ch) {
-        Schedule sched = ch.getSchedule();
-        List<Staff> staffList = ch.getStaff();
+    // Bootstrap shifts for staff
+    public static void bootstrapSchedule(CareHome careHome) throws Exception {
+        Schedule sched = careHome.getSchedule();
 
-        Nurse n1 = (Nurse) staffList.stream()
-                .filter(s -> s instanceof Nurse && s.getStaffId().equals("N1"))
+        // Assign shifts for Nurse
+        Nurse nurse = (Nurse) careHome.getStaff().stream()
+                .filter(s -> s.getRole() == Role.NURSE)
                 .findFirst()
-                .orElse(null);
+                .orElseThrow(() -> new Exception("No nurse found"));
+        sched.assignNurseShift(nurse, new Shift(DayOfWeek.MONDAY, LocalTime.of(8, 0), LocalTime.of(16, 0)));
+        sched.assignNurseShift(nurse, new Shift(DayOfWeek.TUESDAY, LocalTime.of(8, 0), LocalTime.of(16, 0)));
 
-        Nurse n2 = (Nurse) staffList.stream()
-                .filter(s -> s instanceof Nurse && s.getStaffId().equals("N2"))
+        // Assign shifts for Doctor
+        Doctor doctor = (Doctor) careHome.getStaff().stream()
+                .filter(s -> s.getRole() == Role.DOCTOR)
                 .findFirst()
-                .orElse(null);
-
-        for (DayOfWeek day : DayOfWeek.values()) {
-            if (n1 != null) {
-                sched.assignNurseShift(n1, new Shift(day, LocalTime.of(8, 0), LocalTime.of(16, 0)));
-            }
-            if (n2 != null) {
-                sched.assignNurseShift(n2, new Shift(day, LocalTime.of(14, 0), LocalTime.of(22, 0)));
-            }
-            sched.setDoctorPresent(day, true);
-        }
+                .orElseThrow(() -> new Exception("No doctor found"));
+        sched.assignDoctorShift(doctor, new Shift(DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(17, 0)));
+        sched.assignDoctorShift(doctor, new Shift(DayOfWeek.WEDNESDAY, LocalTime.of(9, 0), LocalTime.of(17, 0)));
     }
 }

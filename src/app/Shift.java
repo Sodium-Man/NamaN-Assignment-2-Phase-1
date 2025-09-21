@@ -3,6 +3,7 @@ package app;
 import java.io.Serializable;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.time.Duration;
 
 public class Shift implements Serializable {
     private final DayOfWeek day;
@@ -16,11 +17,11 @@ public class Shift implements Serializable {
     }
 
     public DayOfWeek getDay() { return day; }
-    public LocalTime getStart() { return start; }
-    public LocalTime getEnd() { return end; }
+    public LocalTime getStart() { return start; }   // must match Schedule usage
+    public LocalTime getEnd() { return end; }       // must match Schedule usage
 
-    public int getHours() {
-        return (int) java.time.Duration.between(start, end).toHours();
+    public int getHours() {                          // used in checkCompliance()
+        return (int) Duration.between(start, end).toHours();
     }
 
     @Override

@@ -15,9 +15,13 @@ public class Main {
 
         CareHome ch = CareHome.getInstance();
         if (ch.getWards().isEmpty()) {
-            SampleData.bootstrapBeds(ch);
-            SampleData.bootstrapPeople(ch);
-            SampleData.bootstrapSchedule(ch);
+            try {
+                SampleData.bootstrapBeds(ch);
+                SampleData.bootstrapPeople(ch);
+                SampleData.bootstrapSchedule(ch);
+            } catch (Exception e) {
+                System.out.println("ERROR during bootstrap: " + e.getMessage());
+            }
         }
 
         Scanner sc = new Scanner(System.in);
@@ -62,6 +66,8 @@ public class Main {
             }
         }
     }
+
+    // ---------- Helper Methods (ALL STATIC) ----------
 
     private static void listBeds(CareHome ch) {
         ch.getWards().forEach(w -> {
@@ -154,9 +160,8 @@ public class Main {
         if (schedule.getAllNurseShifts().isEmpty()) {
             System.out.println("  No nurse shifts assigned.");
         } else {
-            schedule.getAllNurseShifts().forEach((nurseId, shifts) -> {
-                System.out.println("Nurse " + nurseId + ":");
-                shifts.forEach(shift -> System.out.println("  " + shift));
+            schedule.getAllNurseShifts().forEach(shift -> {
+                System.out.println("Shift: " + shift.getDay() + " " + shift.getStart() + "-" + shift.getEnd() + " (" + shift.getHours() + "h)");
             });
         }
 

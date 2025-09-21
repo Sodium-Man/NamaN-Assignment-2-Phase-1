@@ -1,4 +1,7 @@
 package app;
 
-public class NotOnDutyException {
+public class NotOnDutyException extends Exception {
+    public NotOnDutyException(String message) {
+        super(message);
+    }
 }
