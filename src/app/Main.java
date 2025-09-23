@@ -38,6 +38,7 @@ public class Main {
             System.out.println("9. Assign nurse shift");
             System.out.println("10. Set doctor availability");
             System.out.println("11. View action logs");
+            System.out.println("12. List all people");
             System.out.println("0. Exit");
             System.out.print("Choice: ");
             String choice = sc.nextLine().trim();
@@ -55,11 +56,12 @@ public class Main {
                     case "9" -> assignNurseShift(ch, sc);
                     case "10" -> setDoctorAvailability(ch, sc);
                     case "11" -> viewLogs(ch);
+                    case "12" -> listAllPeople(ch);
                     case "0" -> {
                         System.out.println("Goodbye!");
                         return;
                     }
-                    default -> System.out.println("Invalid choice. Please enter 0-11.");
+                    default -> System.out.println("Invalid choice. Please enter 0-12.");
                 }
             } catch (Exception ex) {
                 System.out.println("ERROR: " + ex.getMessage());
@@ -90,7 +92,7 @@ public class Main {
         String cond = sc.nextLine().trim();
         Resident r = new Resident("R" + UUID.randomUUID().toString().substring(0, 6), name, gender, cond.isEmpty() ? null : cond);
         ch.addResident(r);
-        System.out.println("Added: " + r);
+        System.out.println("Added: " + r.getResidentId() + " - " + r.getName());
     }
 
     private static void assignResident(CareHome ch, Scanner sc) throws Exception {
@@ -244,5 +246,36 @@ public class Main {
         }
 
         ch.getLogs().forEach(log -> System.out.println(log));
+    }
+
+    private static void listAllPeople(CareHome ch) {
+        System.out.println("\n=== All People in CareHome ===");
+
+        // Residents
+        System.out.println("\nResidents:");
+        if (ch.getResidents().isEmpty()) {
+            System.out.println("  No residents found.");
+        } else {
+            ch.getResidents().forEach(r ->
+                    System.out.println("  " + r.getResidentId() + " - " + r.getName()));
+        }
+
+        // Managers
+        System.out.println("\nManagers:");
+        ch.getStaff().stream()
+                .filter(s -> s instanceof Manager)
+                .forEach(m -> System.out.println("  " + m.getStaffId() + " - " + m.getName()));
+
+        // Nurses
+        System.out.println("\nNurses:");
+        ch.getStaff().stream()
+                .filter(s -> s instanceof Nurse)
+                .forEach(n -> System.out.println("  " + n.getStaffId() + " - " + n.getName()));
+
+        // Doctors
+        System.out.println("\nDoctors:");
+        ch.getStaff().stream()
+                .filter(s -> s instanceof Doctor)
+                .forEach(d -> System.out.println("  " + d.getStaffId() + " - " + d.getName()));
     }
 }

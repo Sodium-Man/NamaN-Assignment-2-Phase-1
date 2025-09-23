@@ -28,13 +28,43 @@ public class SampleData {
     // Bootstrap sample staff and residents
     public static void bootstrapPeople(CareHome careHome) {
         // Staff
-        Manager manager = new Manager("M1", "Rhea", Gender.F, "rhea", "pass");
-        Nurse nurse = new Nurse("N1", "Cathy", Gender.M, "cathy", "pass");
-        Doctor doctor = new Doctor("D1", "Jax", Gender.M, "jax", "pass");
+        Manager manager1 = new Manager("M1", "Rhea", Gender.F, "rhea", "pass");
+        Manager manager2 = new Manager("M2", "Josh", Gender.M, "josh", "pass");
 
-        careHome.addStaff(manager);
-        careHome.addStaff(nurse);
-        careHome.addStaff(doctor);
+        Nurse nurse1 = new Nurse("N1", "Cathy", Gender.M, "cathy", "pass");
+        Nurse nurse2 = new Nurse("N2", "Bella", Gender.M, "bella", "pass");
+        Nurse nurse3 = new Nurse("N3", "Helene", Gender.M, "helene", "pass");
+        Nurse nurse4 = new Nurse("N4", "Dane", Gender.M, "dane", "pass");
+
+
+
+        Doctor doctor1 = new Doctor("D1", "Jax", Gender.M, "jax", "pass");
+        Doctor doctor2 = new Doctor("D2", "Vaik", Gender.M, "vaik", "pass");
+        Doctor doctor3 = new Doctor("D3", "Khan", Gender.M, "khan", "pass");
+        Doctor doctor4 = new Doctor("D4", "Gary", Gender.M, "gary", "pass");
+        Doctor doctor5 = new Doctor("D5", "Henry", Gender.M, "henry", "pass");
+        Doctor doctor6 = new Doctor("D6", "Jay", Gender.M, "jay", "pass");
+        Doctor doctor7 = new Doctor("D7", "Neil", Gender.M, "neil", "pass");
+
+
+        careHome.addStaff(manager1);
+        careHome.addStaff(manager2);
+
+        careHome.addStaff(nurse1);
+        careHome.addStaff(nurse2);
+        careHome.addStaff(nurse3);
+        careHome.addStaff(nurse4);
+
+
+
+        careHome.addStaff(doctor1);
+        careHome.addStaff(doctor2);
+        careHome.addStaff(doctor3);
+        careHome.addStaff(doctor4);
+        careHome.addStaff(doctor5);
+        careHome.addStaff(doctor6);
+        careHome.addStaff(doctor7);
+
 
         // Residents
         Resident res1 = new Resident("R1", "Peter Patel", Gender.M, "Hypertension");
