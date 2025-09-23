@@ -26,7 +26,7 @@ public class Main {
 
         Scanner sc = new Scanner(System.in);
         while (true) {
-            System.out.println("\n=== Resident HealthCare System (Phase 1) ===");
+            System.out.println("\n=== Resident HealthCare System ===");
             System.out.println("1. List beds");
             System.out.println("2. Add resident");
             System.out.println("3. Assign resident to bed");
