@@ -28,17 +28,17 @@ public class SampleData {
     // Bootstrap sample staff and residents
     public static void bootstrapPeople(CareHome careHome) {
         // Staff
-        Manager manager = new Manager("M1", "Alice", Gender.F, "alice", "pass");
-        Nurse nurse = new Nurse("N1", "Bob", Gender.M, "bob", "pass");
-        Doctor doctor = new Doctor("D1", "Charlie", Gender.M, "charlie", "pass");
+        Manager manager = new Manager("M1", "Rhea", Gender.F, "rhea", "pass");
+        Nurse nurse = new Nurse("N1", "Cathy", Gender.M, "cathy", "pass");
+        Doctor doctor = new Doctor("D1", "Jax", Gender.M, "jax", "pass");
 
         careHome.addStaff(manager);
         careHome.addStaff(nurse);
         careHome.addStaff(doctor);
 
         // Residents
-        Resident res1 = new Resident("R1", "John Doe", Gender.M, "Hypertension");
-        Resident res2 = new Resident("R2", "Jane Smith", Gender.F, "Diabetes");
+        Resident res1 = new Resident("R1", "Peter Patel", Gender.M, "Hypertension");
+        Resident res2 = new Resident("R2", "Naman Patel", Gender.F, "Diabetes");
 
         careHome.addResident(res1);
         careHome.addResident(res2);
