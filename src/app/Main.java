@@ -10,7 +10,6 @@ public class Main {
     private static final File DATA_FILE = new File("C:\\Users\\bhala\\Desktop\\NamaN Assignment 2 Phase 1\\data\\carehome.dat");
 
     public static void main(String[] args) {
-        // Create data directory if it doesn't exist
         DATA_FILE.getParentFile().mkdirs();
 
         CareHome ch = CareHome.getInstance();
@@ -68,8 +67,6 @@ public class Main {
             }
         }
     }
-
-    // ---------- Helper Methods (ALL STATIC) ----------
 
     private static void listBeds(CareHome ch) {
         ch.getWards().forEach(w -> {

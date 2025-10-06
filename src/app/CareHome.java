@@ -32,8 +32,6 @@ public class CareHome implements Serializable {
         return instance;
     }
 
-    // ---------- Basic Management ----------
-
     public void addWard(Ward ward) {
         wards.add(ward);
     }
@@ -69,8 +67,6 @@ public class CareHome implements Serializable {
     public void log(String staffId, String action) {
         logs.add(new LogEntry(staffId, action, LocalDateTime.now()));
     }
-
-    // ---------- Resident & Bed Management ----------
 
     public void assignResidentToBed(String staffId, Resident resident, String bedId) throws Exception {
         Staff s = getStaffById(staffId);
@@ -116,8 +112,6 @@ public class CareHome implements Serializable {
         log(staffId, "Viewed resident details for bed " + bedId);
         return bed.getResident();
     }
-
-    // ---------- Prescription Management ----------
 
     public void attachPrescription(String staffId, String bedId, Prescription prescription)
             throws UnauthorizedActionException, NotOnDutyException, Exception {
@@ -166,8 +160,6 @@ public class CareHome implements Serializable {
         log(staffId, "Administered " + dose + " of " + med.getName() + " to resident " + residentId + " at " + now);
     }
 
-    // ---------- Helpers ----------
-
     private Staff getStaffById(String staffId) throws Exception {
         return staff.stream()
                 .filter(s -> s.getStaffId().equals(staffId))
@@ -202,13 +194,9 @@ public class CareHome implements Serializable {
         }
     }
 
-    // ---------- Compliance ----------
-
     public void checkCompliance() throws Exception {
         schedule.checkCompliance();
     }
-
-    // ---------- Save/Load ----------
 
     public void saveData(File file) throws IOException {
         try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file))) {
@@ -222,8 +210,6 @@ public class CareHome implements Serializable {
             return instance;
         }
     }
-
-    // ---------- LogEntry Inner Class ----------
 
     public static class LogEntry implements Serializable {
         private final String staffId;
