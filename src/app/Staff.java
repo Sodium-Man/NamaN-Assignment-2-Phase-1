@@ -7,7 +7,7 @@ public abstract class Staff implements Serializable {
     protected final String staffId;
     protected String name;
     protected String username;
-    protected String password;
+    protected String password; // Stored in plain text for simplicity; use hashing in production
     protected Gender gender;
     protected final Role role;
 
@@ -16,7 +16,7 @@ public abstract class Staff implements Serializable {
         this.name = Objects.requireNonNull(name);
         this.username = Objects.requireNonNull(username);
         this.password = Objects.requireNonNull(password);
-        this.gender = Objects.requireNonNull(gender);  // FIXED: changed this.gender to gender
+        this.gender = Objects.requireNonNull(gender);
         this.role = Objects.requireNonNull(role);
     }
 
@@ -27,6 +27,7 @@ public abstract class Staff implements Serializable {
     public Role getRole() { return role; }
 
     public void setPassword(String password) { this.password = password; }
+    public String getPassword() { return password; } // Added for login; secure with hashing in real systems
     public abstract void displayInfo();
 
     @Override

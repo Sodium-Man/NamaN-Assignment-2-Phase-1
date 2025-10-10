@@ -7,7 +7,7 @@ import java.util.Scanner;
 import java.util.UUID;
 
 public class Main {
-    private static final File DATA_FILE = new File("C:\\Users\\bhala\\Desktop\\NamaN Assignment 2 Phase 1\\data\\carehome.dat");
+    private static final File DATA_FILE = new File("data/carehome.dat");
 
     public static void main(String[] args) {
         DATA_FILE.getParentFile().mkdirs();
@@ -25,7 +25,7 @@ public class Main {
 
         Scanner sc = new Scanner(System.in);
         while (true) {
-            System.out.println("\n=== Resident HealthCare System ===");
+            System.out.println("\n=== Resident HealthCare System (Console) ===");
             System.out.println("1. List beds");
             System.out.println("2. Add resident");
             System.out.println("3. Assign resident to bed");
@@ -38,6 +38,11 @@ public class Main {
             System.out.println("10. Set doctor availability");
             System.out.println("11. View action logs");
             System.out.println("12. List all people");
+            System.out.println("13. Add staff");
+            System.out.println("14. Modify staff password");
+            System.out.println("15. Add prescription");
+            System.out.println("16. Administer medication");
+            System.out.println("17. Discharge resident");
             System.out.println("0. Exit");
             System.out.print("Choice: ");
             String choice = sc.nextLine().trim();
@@ -56,26 +61,28 @@ public class Main {
                     case "10" -> setDoctorAvailability(ch, sc);
                     case "11" -> viewLogs(ch);
                     case "12" -> listAllPeople(ch);
+                    case "13" -> addStaff(ch, sc);
+                    case "14" -> modifyStaffPassword(ch, sc);
+                    case "15" -> addPrescription(ch, sc);
+                    case "16" -> administerMedication(ch, sc);
+                    case "17" -> dischargeResident(ch, sc);
                     case "0" -> {
-                        System.out.println("Goodbye!");
+                        System.out.println("Exiting...");
                         return;
                     }
-                    default -> System.out.println("Invalid choice. Please enter 0-12.");
+                    default -> System.out.println("Invalid choice.");
                 }
-            } catch (Exception ex) {
-                System.out.println("ERROR: " + ex.getMessage());
+            } catch (Exception e) {
+                System.out.println("Error: " + e.getMessage());
             }
         }
     }
 
     private static void listBeds(CareHome ch) {
-        ch.getWards().forEach(w -> {
-            System.out.println("[" + w.getWardName() + "]");
-            w.getRooms().forEach(r -> {
-                System.out.print("  " + r.getRoomId() + ": ");
-                r.getBeds().forEach(b -> System.out.print(b + " | "));
-                System.out.println();
-            });
+        System.out.println("\n=== Beds ===");
+        ch.getWards().forEach(ward -> {
+            System.out.println(ward);
+            ward.getRooms().forEach(room -> System.out.println("  " + room));
         });
     }
 
@@ -83,196 +90,169 @@ public class Main {
         System.out.print("Name: ");
         String name = sc.nextLine().trim();
         System.out.print("Gender (M/F): ");
-        String g = sc.nextLine().trim().toUpperCase();
-        Gender gender = g.startsWith("M") ? Gender.M : Gender.F;
-        System.out.print("Medical condition (optional): ");
-        String cond = sc.nextLine().trim();
-        Resident r = new Resident("R" + UUID.randomUUID().toString().substring(0, 6), name, gender, cond.isEmpty() ? null : cond);
+        Gender gender = Gender.valueOf(sc.nextLine().trim().toUpperCase());
+        System.out.print("Medical Condition: ");
+        String condition = sc.nextLine().trim();
+        String id = "R" + UUID.randomUUID().toString().substring(0, 4);
+        Resident r = new Resident(id, name, gender, condition);
         ch.addResident(r);
-        System.out.println("Added: " + r.getResidentId() + " - " + r.getName());
+        System.out.println("✓ Resident added: " + r);
     }
 
     private static void assignResident(CareHome ch, Scanner sc) throws Exception {
-        System.out.print("Staff ID (Manager or Nurse): ");
+        System.out.print("Staff ID: ");
         String staffId = sc.nextLine().trim();
         System.out.print("Resident ID: ");
-        String residentId = sc.nextLine().trim();
+        String resId = sc.nextLine().trim();
         System.out.print("Bed ID: ");
         String bedId = sc.nextLine().trim();
-        Resident r = ch.getResidents().stream().filter(x -> x.getResidentId().equals(residentId)).findFirst().orElse(null);
-        if (r == null) throw new Exception("Resident not found");
+        Resident r = ch.getResidentById(resId);
         ch.assignResidentToBed(staffId, r, bedId);
-        System.out.println("Assigned.");
+        System.out.println("✓ Assigned!");
     }
 
     private static void moveResident(CareHome ch, Scanner sc) throws Exception {
-        System.out.print("Staff ID (Manager or Nurse): ");
+        System.out.print("Staff ID: ");
         String staffId = sc.nextLine().trim();
         System.out.print("From Bed ID: ");
-        String fromBed = sc.nextLine().trim();
+        String from = sc.nextLine().trim();
         System.out.print("To Bed ID: ");
-        String toBed = sc.nextLine().trim();
-        ch.moveResident(staffId, fromBed, toBed);
-        System.out.println("Moved.");
+        String to = sc.nextLine().trim();
+        ch.moveResident(staffId, from, to);
+        System.out.println("✓ Moved!");
     }
 
-    private static void checkCompliance(CareHome ch) {
-        try {
-            ch.checkCompliance();
-            System.out.println("✓ Compliance check passed. All regulations are satisfied.");
-        } catch (Exception e) {
-            System.out.println("✗ COMPLIANCE VIOLATION: " + e.getMessage());
-        }
+    private static void checkCompliance(CareHome ch) throws Exception {
+        ch.checkCompliance();
+        System.out.println("✓ Compliance check passed!");
     }
 
-    private static void saveData(CareHome ch) {
-        try {
-            ch.saveData(DATA_FILE);
-            System.out.println("✓ Data successfully saved to: " + DATA_FILE.getAbsolutePath());
-        } catch (Exception e) {
-            System.out.println("ERROR: Failed to save data: " + e.getMessage());
-        }
+    private static void saveData(CareHome ch) throws Exception {
+        ch.saveData(DATA_FILE);
+        System.out.println("✓ Data saved!");
     }
 
-    private static CareHome loadData() {
-        try {
-            if (!DATA_FILE.exists()) {
-                System.out.println("No saved data found. Starting with fresh instance.");
-                return CareHome.getInstance();
-            }
-
-            CareHome loaded = CareHome.loadData(DATA_FILE);
-            System.out.println("✓ Data successfully loaded from: " + DATA_FILE.getAbsolutePath());
-            return loaded;
-        } catch (Exception e) {
-            System.out.println("ERROR: Failed to load data: " + e.getMessage());
-            return CareHome.getInstance();
-        }
+    private static CareHome loadData() throws Exception {
+        System.out.println("✓ Data loaded!");
+        return CareHome.loadData(DATA_FILE);
     }
 
     private static void viewSchedule(CareHome ch) {
-        Schedule schedule = ch.getSchedule();
-        System.out.println("\n=== Current Schedule ===");
-
-        // Display nurse shifts
-        System.out.println("Nurse Shifts:");
-        if (schedule.getAllNurseShifts().isEmpty()) {
-            System.out.println("  No nurse shifts assigned.");
-        } else {
-            schedule.getAllNurseShifts().forEach(shift -> {
-                System.out.println("Shift: " + shift.getDay() + " " + shift.getStart() + "-" + shift.getEnd() + " (" + shift.getHours() + "h)");
-            });
-        }
-
-        // Display doctor availability
-        System.out.println("\nDoctor Availability:");
-        for (DayOfWeek day : DayOfWeek.values()) {
-            System.out.println(day + ": " + (schedule.isDoctorPresent(day) ? "PRESENT" : "NOT PRESENT"));
-        }
+        System.out.println("\n=== Schedule ===");
+        ch.getSchedule().getAllShifts().forEach(s -> System.out.println(s));
     }
 
     private static void assignNurseShift(CareHome ch, Scanner sc) throws Exception {
-        System.out.println("\n=== Assign Nurse Shift ===");
-
-        // List available nurses
-        System.out.println("Available Nurses:");
-        ch.getStaff().stream()
-                .filter(s -> s instanceof Nurse)
-                .forEach(nurse -> System.out.println(nurse.getStaffId() + ": " + nurse.getName()));
-
-        System.out.print("Enter Nurse ID: ");
+        System.out.print("Nurse ID: ");
         String nurseId = sc.nextLine().trim();
-
-        Nurse nurse = (Nurse) ch.getStaff().stream()
-                .filter(s -> s.getStaffId().equals(nurseId) && s instanceof Nurse)
-                .findFirst()
-                .orElseThrow(() -> new Exception("Nurse not found: " + nurseId));
-
-        // Get day of week
-        System.out.println("Days: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY");
-        System.out.print("Enter day: ");
-        String dayInput = sc.nextLine().trim().toUpperCase();
-        DayOfWeek day = DayOfWeek.valueOf(dayInput);
-
-        // Get shift times
-        System.out.print("Enter start time (HH:MM): ");
-        String startTime = sc.nextLine().trim();
-        System.out.print("Enter end time (HH:MM): ");
-        String endTime = sc.nextLine().trim();
-
-        LocalTime start = LocalTime.parse(startTime);
-        LocalTime end = LocalTime.parse(endTime);
-
-        // Create and assign shift
-        Shift shift = new Shift(day, start, end);
-        ch.getSchedule().assignNurseShift(nurse, shift);
-
-        ch.log("SYSTEM", "Assigned shift to nurse " + nurseId + ": " + shift);
-        System.out.println("✓ Shift assigned successfully!");
+        Nurse nurse = (Nurse) ch.getStaffById(nurseId);
+        System.out.print("Day (e.g., MONDAY): ");
+        DayOfWeek day = DayOfWeek.valueOf(sc.nextLine().trim().toUpperCase());
+        System.out.print("Start time (HH:MM): ");
+        LocalTime start = LocalTime.parse(sc.nextLine().trim());
+        System.out.print("End time (HH:MM): ");
+        LocalTime end = LocalTime.parse(sc.nextLine().trim());
+        ch.getSchedule().assignNurseShift(nurse, new Shift(day, start, end));
+        System.out.println("✓ Shift assigned!");
     }
 
     private static void setDoctorAvailability(CareHome ch, Scanner sc) {
-        System.out.println("\n=== Set Doctor Availability ===");
-
-        // List available doctors
-        System.out.println("Available Doctors:");
-        ch.getStaff().stream()
-                .filter(s -> s instanceof Doctor)
-                .forEach(doctor -> System.out.println(doctor.getStaffId() + ": " + doctor.getName()));
-
-        System.out.println("Days: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY");
-        System.out.print("Enter day: ");
-        String dayInput = sc.nextLine().trim().toUpperCase();
-        DayOfWeek day = DayOfWeek.valueOf(dayInput);
-
-        System.out.print("Is doctor available? (Y/N): ");
-        String available = sc.nextLine().trim().toUpperCase();
-
-        boolean isPresent = available.startsWith("Y");
-        ch.getSchedule().setDoctorPresent(day, isPresent);
-
-        ch.log("SYSTEM", "Set doctor availability for " + day + ": " + (isPresent ? "PRESENT" : "NOT PRESENT"));
-        System.out.println("✓ Doctor availability updated!");
+        System.out.print("Day (e.g., MONDAY): ");
+        DayOfWeek day = DayOfWeek.valueOf(sc.nextLine().trim().toUpperCase());
+        System.out.print("Available (Y/N): ");
+        boolean available = sc.nextLine().trim().toUpperCase().startsWith("Y");
+        ch.getSchedule().setDoctorPresent(day, available);
+        System.out.println("✓ Availability set!");
     }
 
     private static void viewLogs(CareHome ch) {
         System.out.println("\n=== Action Logs ===");
         if (ch.getLogs().isEmpty()) {
-            System.out.println("No action logs available.");
+            System.out.println("No logs.");
             return;
         }
-
         ch.getLogs().forEach(log -> System.out.println(log));
     }
 
     private static void listAllPeople(CareHome ch) {
-        System.out.println("\n=== All People in CareHome ===");
-
-        // Residents
+        System.out.println("\n=== All People ===");
         System.out.println("\nResidents:");
-        if (ch.getResidents().isEmpty()) {
-            System.out.println("  No residents found.");
-        } else {
-            ch.getResidents().forEach(r ->
-                    System.out.println("  " + r.getResidentId() + " - " + r.getName()));
-        }
-
-        // Managers
+        ch.getResidents().forEach(r -> System.out.println("  " + r.getResidentId() + " - " + r.getName()));
         System.out.println("\nManagers:");
-        ch.getStaff().stream()
-                .filter(s -> s instanceof Manager)
-                .forEach(m -> System.out.println("  " + m.getStaffId() + " - " + m.getName()));
-
-        // Nurses
+        ch.getStaff().stream().filter(s -> s instanceof Manager).forEach(s -> System.out.println("  " + s.getStaffId() + " - " + s.getName()));
         System.out.println("\nNurses:");
-        ch.getStaff().stream()
-                .filter(s -> s instanceof Nurse)
-                .forEach(n -> System.out.println("  " + n.getStaffId() + " - " + n.getName()));
-
-        // Doctors
+        ch.getStaff().stream().filter(s -> s instanceof Nurse).forEach(s -> System.out.println("  " + s.getStaffId() + " - " + s.getName()));
         System.out.println("\nDoctors:");
-        ch.getStaff().stream()
-                .filter(s -> s instanceof Doctor)
-                .forEach(d -> System.out.println("  " + d.getStaffId() + " - " + d.getName()));
+        ch.getStaff().stream().filter(s -> s instanceof Doctor).forEach(s -> System.out.println("  " + s.getStaffId() + " - " + s.getName()));
+    }
+
+    // New methods
+    private static void addStaff(CareHome ch, Scanner sc) {
+        System.out.print("Role (MANAGER/DOCTOR/NURSE): ");
+        Role role = Role.valueOf(sc.nextLine().trim().toUpperCase());
+        System.out.print("Name: ");
+        String name = sc.nextLine().trim();
+        System.out.print("Gender (M/F): ");
+        Gender gender = Gender.valueOf(sc.nextLine().trim().toUpperCase());
+        System.out.print("Username: ");
+        String username = sc.nextLine().trim();
+        System.out.print("Password: ");
+        String password = sc.nextLine().trim();
+        String id = role.name().charAt(0) + UUID.randomUUID().toString().substring(0, 4);
+        Staff s;
+        switch (role) {
+            case MANAGER -> s = new Manager(id, name, gender, username, password);
+            case DOCTOR -> s = new Doctor(id, name, gender, username, password);
+            case NURSE -> s = new Nurse(id, name, gender, username, password);
+            default -> { System.out.println("Invalid role."); return; }
+        }
+        ch.addStaff(s);
+        System.out.println("✓ Staff added: " + s);
+    }
+
+    private static void modifyStaffPassword(CareHome ch, Scanner sc) throws Exception {
+        System.out.print("Staff ID: ");
+        String id = sc.nextLine().trim();
+        System.out.print("New Password: ");
+        String pass = sc.nextLine().trim();
+        ch.modifyStaffPassword(id, pass);
+        System.out.println("✓ Password updated!");
+    }
+
+    private static void addPrescription(CareHome ch, Scanner sc) throws Exception {
+        System.out.print("Doctor ID: ");
+        String docId = sc.nextLine().trim();
+        System.out.print("Resident ID: ");
+        String resId = sc.nextLine().trim();
+        System.out.print("Medicine Name: ");
+        String medName = sc.nextLine().trim();
+        Medicine med = new Medicine(medName);
+        System.out.print("Dose: ");
+        String dose = sc.nextLine().trim();
+        System.out.print("Scheduled Time (HH:MM): ");
+        LocalTime time = LocalTime.parse(sc.nextLine().trim());
+        ch.addPrescription(docId, resId, med, dose, time);
+        System.out.println("✓ Prescription added!");
+    }
+
+    private static void administerMedication(CareHome ch, Scanner sc) throws Exception {
+        System.out.print("Nurse ID: ");
+        String nurseId = sc.nextLine().trim();
+        System.out.print("Resident ID: ");
+        String resId = sc.nextLine().trim();
+        System.out.print("Medicine Name: ");
+        String medName = sc.nextLine().trim();
+        Medicine med = new Medicine(medName);
+        ch.recordAdministration(nurseId, resId, med);
+        System.out.println("✓ Medication administered!");
+    }
+
+    private static void dischargeResident(CareHome ch, Scanner sc) throws Exception {
+        System.out.print("Staff ID: ");
+        String staffId = sc.nextLine().trim();
+        System.out.print("Resident ID: ");
+        String resId = sc.nextLine().trim();
+        ch.dischargeResident(staffId, resId);
+        System.out.println("✓ Resident discharged and archived!");
     }
 }
