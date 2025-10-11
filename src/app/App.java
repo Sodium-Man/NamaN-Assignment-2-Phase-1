@@ -45,7 +45,12 @@ public class App extends Application {
             }
         }
 
-        // Login Scene
+        primaryStage.setScene(createLoginScene());
+        primaryStage.setTitle("Resident HealthCare System");
+        primaryStage.show();
+    }
+
+    private Scene createLoginScene() {
         VBox loginBox = new VBox(10);
         loginBox.setAlignment(Pos.CENTER);
         TextField usernameField = new TextField();
@@ -69,10 +74,7 @@ public class App extends Application {
             }
         });
 
-        Scene loginScene = new Scene(loginBox, 300, 200);
-        primaryStage.setScene(loginScene);
-        primaryStage.setTitle("Resident HealthCare System");
-        primaryStage.show();
+        return new Scene(loginBox, 300, 200);
     }
 
     private Scene createMainScene() {
@@ -131,7 +133,15 @@ public class App extends Application {
         viewArchives.setOnAction(e -> viewArchivesGUI());
         viewMenu.getItems().addAll(viewLogs, viewSchedule, viewArchives);
 
-        menuBar.getMenus().addAll(managerMenu, viewMenu);
+        Menu accountMenu = new Menu("Account");
+        MenuItem logout = new MenuItem("Logout");
+        logout.setOnAction(e -> {
+            currentStaff = null;
+            primaryStage.setScene(createLoginScene());
+        });
+        accountMenu.getItems().add(logout);
+
+        menuBar.getMenus().addAll(managerMenu, viewMenu, accountMenu);
 
         VBox root = new VBox(menuBar, tabPane);
         return new Scene(root, 800, 600);
