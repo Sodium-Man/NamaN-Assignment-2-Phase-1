@@ -3,29 +3,30 @@ package app;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Random;
 
 public class SampleData {
 
     public static void bootstrapBeds(CareHome careHome) {
-        // Ward 1
+        // Create exactly 2 wards
         Ward ward1 = new Ward("W1", "General Ward 1");
-        addRoomsToWard(ward1);
-        careHome.addWard(ward1);
-
-        // Ward 2
         Ward ward2 = new Ward("W2", "General Ward 2");
-        addRoomsToWard(ward2);
+        addRoomsToWard(ward1, "W1");
+        addRoomsToWard(ward2, "W2");
+        careHome.addWard(ward1);
         careHome.addWard(ward2);
     }
 
-    private static void addRoomsToWard(Ward ward) {
-        Room r1 = new Room("R1"); for (int i = 1; i <= 1; i++) r1.addBed(new Bed("B" + i));
-        Room r2 = new Room("R2"); for (int i = 2; i <= 3; i++) r2.addBed(new Bed("B" + i));
-        Room r3 = new Room("R3"); for (int i = 4; i <= 6; i++) r3.addBed(new Bed("B" + i));
-        Room r4 = new Room("R4"); for (int i = 7; i <= 10; i++) r4.addBed(new Bed("B" + i));
-        Room r5 = new Room("R5"); for (int i = 11; i <= 13; i++) r5.addBed(new Bed("B" + i));
-        Room r6 = new Room("R6"); for (int i = 14; i <= 15; i++) r6.addBed(new Bed("B" + i));
-        ward.addRoom(r1); ward.addRoom(r2); ward.addRoom(r3); ward.addRoom(r4); ward.addRoom(r5); ward.addRoom(r6);
+    private static void addRoomsToWard(Ward ward, String wardPrefix) {
+        Random random = new Random();
+        for (int i = 1; i <= 6; i++) { // Exactly 6 rooms per ward
+            Room room = new Room(wardPrefix + "-R" + i);
+            int bedCount = random.nextInt(4) + 1; // Random 1-4 beds
+            for (int j = 1; j <= bedCount; j++) {
+                room.addBed(new Bed(wardPrefix + "-R" + i + "-B" + j));
+            }
+            ward.addRoom(room);
+        }
     }
 
     public static void bootstrapPeople(CareHome careHome) {
@@ -60,9 +61,13 @@ public class SampleData {
         // Assign nurses to shifts (example: cycle through nurses for coverage)
         List<Nurse> nurses = careHome.getStaff().stream().filter(s -> s instanceof Nurse).map(Nurse.class::cast).toList();
         for (DayOfWeek day : DayOfWeek.values()) {
-            sched.assignNurseShift(nurses.get(0), new Shift(day, morningStart, morningEnd));
-            sched.assignNurseShift(nurses.get(1), new Shift(day, afternoonStart, afternoonEnd));
-            // Add more if needed for redundancy
+            if (nurses.size() > 0) {
+                sched.assignNurseShift(nurses.get(0 % nurses.size()), new Shift(day, morningStart, morningEnd));
+            }
+            if (nurses.size() > 1) {
+                sched.assignNurseShift(nurses.get(1 % nurses.size()), new Shift(day, afternoonStart, afternoonEnd));
+            }
+            // Add more if needed for redundancy (adjust based on nurse count)
         }
 
         // Doctor shifts: 1 hour per day (9-10)
@@ -71,9 +76,11 @@ public class SampleData {
         LocalTime doctorEnd = LocalTime.of(10, 0);
         int docIndex = 0;
         for (DayOfWeek day : DayOfWeek.values()) {
-            sched.assignDoctorShift(doctors.get(docIndex % doctors.size()), new Shift(day, doctorStart, doctorEnd));
-            sched.setDoctorPresent(day, true);
-            docIndex++;
+            if (docIndex < doctors.size()) {
+                sched.assignDoctorShift(doctors.get(docIndex), new Shift(day, doctorStart, doctorEnd));
+                sched.setDoctorPresent(day, true);
+                docIndex++;
+            }
         }
     }
 }
