@@ -1,13 +1,13 @@
 package app;
 
 import java.io.Serializable;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 public class Administration implements Serializable {
     private final Medicine medicine;
-    private final LocalTime adminTime;
+    private final LocalDateTime adminTime; // Changed from LocalTime to LocalDateTime
 
-    public Administration(Medicine medicine, LocalTime adminTime) {
+    public Administration(Medicine medicine, LocalDateTime adminTime) {
         this.medicine = medicine;
         this.adminTime = adminTime;
     }
@@ -16,7 +16,7 @@ public class Administration implements Serializable {
         return medicine;
     }
 
-    public LocalTime getAdminTime() {
+    public LocalDateTime getAdminTime() {
         return adminTime;
     }
 

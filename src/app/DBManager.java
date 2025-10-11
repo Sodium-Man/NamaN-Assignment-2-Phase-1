@@ -37,12 +37,23 @@ public class DBManager {
         String sql = "INSERT INTO prescriptions (resident_id, medicine, dose, time) VALUES (?, ?, ?, ?)";
         try (Connection conn = DriverManager.getConnection(DB_URL);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, residentId);
-            Medicine medicine = p.getMedicine();
-            pstmt.setString(2, medicine != null ? medicine.getName() : null); // Line 41
-            pstmt.setString(3, p.getDose());
-            pstmt.setString(4, p.getTime() != null ? p.getTime().toString() : null);
-            pstmt.executeUpdate();
+            conn.setAutoCommit(false); // Use transaction for atomicity
+            try {
+                for (Prescription.PrescriptionItemData item : p.getPrescriptionItemsData()) {
+                    pstmt.setString(1, residentId);
+                    pstmt.setString(2, item.getMedicine().getName());
+                    pstmt.setString(3, item.getDose());
+                    pstmt.setString(4, item.getTime() != null ? item.getTime().toString() : null);
+                    pstmt.addBatch();
+                }
+                pstmt.executeBatch();
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
         }
     }
 

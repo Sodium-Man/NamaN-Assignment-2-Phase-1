@@ -2,20 +2,23 @@ package app;
 
 import java.io.*;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 
 public class CareHome implements Serializable {
-    private static CareHome instance;
+    private static CareHome instance; // Singleton for single system instance (SOLID: Single Responsibility)
+    private static final long serialVersionUID = 1L; // For serialization compatibility
 
     private final List<Ward> wards;
     private final List<Staff> staff;
     private final List<Resident> residents;
-    private final List<LogEntry> logs;
+    private final List<LogEntry> logs; // Unified logging with LogEntry
     private final Schedule schedule;
-    private final Map<String, Prescription> prescriptions; // residentId -> prescription
+    private final Map<String, Prescription> prescriptions; // residentId -> Prescription
 
+    // Private constructor for Singleton pattern
     private CareHome() {
         wards = new ArrayList<>();
         staff = new ArrayList<>();
@@ -25,6 +28,7 @@ public class CareHome implements Serializable {
         prescriptions = new HashMap<>();
     }
 
+    // Singleton access method
     public static CareHome getInstance() {
         if (instance == null) {
             instance = new CareHome();
@@ -32,185 +36,234 @@ public class CareHome implements Serializable {
         return instance;
     }
 
+    // Ward management
     public void addWard(Ward ward) {
         wards.add(ward);
+        log("SYSTEM", "Added ward " + ward.getWardId());
     }
 
     public List<Ward> getWards() {
-        return wards;
+        return new ArrayList<>(wards); // Defensive copy for encapsulation
     }
 
+    // Staff management
     public void addStaff(Staff s) {
         staff.add(s);
+        log("SYSTEM", "Added staff " + s.getStaffId());
     }
 
     public List<Staff> getStaff() {
-        return staff;
+        return new ArrayList<>(staff); // Defensive copy
     }
 
+    public void modifyStaffPassword(String staffId, String newPassword) throws Exception {
+        Staff s = getStaffById(staffId);
+        s.setPassword(newPassword);
+        log(staffId, "Modified password for staff " + staffId);
+    }
+
+    // Resident management
     public void addResident(Resident r) {
+        r.setAdmissionDate(LocalDate.now());
         residents.add(r);
+        log("SYSTEM", "Added resident " + r.getResidentId());
     }
 
     public List<Resident> getResidents() {
-        return residents;
+        return new ArrayList<>(residents); // Defensive copy
     }
 
+    // Logging
     public List<LogEntry> getLogs() {
-        return logs;
-    }
-
-    public Schedule getSchedule() {
-        return schedule;
+        return new ArrayList<>(logs); // Defensive copy
     }
 
     public void log(String staffId, String action) {
         logs.add(new LogEntry(staffId, action, LocalDateTime.now()));
     }
 
+    // Schedule access
+    public Schedule getSchedule() {
+        return schedule;
+    }
+
+    // Bed assignment
     public void assignResidentToBed(String staffId, Resident resident, String bedId) throws Exception {
         Staff s = getStaffById(staffId);
         checkAuthorization(s, Role.MANAGER, Role.NURSE);
+        checkOnDuty(s);
 
         Bed bed = findBed(bedId);
+        if (bed == null) {
+            throw new Exception("Bed " + bedId + " not found.");
+        }
         if (!bed.isVacant()) {
             throw new Exception("Bed " + bedId + " is already occupied.");
         }
+        // TODO: Add gender/condition/isolation checks per PDF
         bed.assignResident(resident);
         log(staffId, "Assigned resident " + resident.getResidentId() + " to bed " + bedId);
     }
 
+    // Move resident
     public void moveResident(String staffId, String fromBedId, String toBedId) throws Exception {
         Staff s = getStaffById(staffId);
         checkAuthorization(s, Role.MANAGER, Role.NURSE);
+        checkOnDuty(s);
 
-        Bed from = findBed(fromBedId);
-        Bed to = findBed(toBedId);
-
-        if (from.getResident() == null) {
+        Bed fromBed = findBed(fromBedId);
+        Bed toBed = findBed(toBedId);
+        if (fromBed == null || toBed == null) {
+            throw new Exception("Bed not found: " + (fromBed == null ? fromBedId : toBedId));
+        }
+        if (fromBed.isVacant()) {
             throw new Exception("No resident in bed " + fromBedId);
         }
-        if (!to.isVacant()) {
-            throw new Exception("Bed " + toBedId + " already occupied");
+        if (!toBed.isVacant()) {
+            throw new Exception("Target bed " + toBedId + " is already occupied.");
         }
-
-        Resident r = from.getResident();
-        from.removeResident();
-        to.assignResident(r);
-
-        log(staffId, "Moved resident " + r.getResidentId() + " from " + fromBedId + " to " + toBedId);
+        Resident r = fromBed.getResident();
+        fromBed.removeResident();
+        // TODO: Add gender/condition/isolation checks per PDF
+        toBed.assignResident(r);
+        log(staffId, "Moved resident " + r.getResidentId() + " from bed " + fromBedId + " to " + toBedId);
     }
 
-    public Resident viewResidentDetails(String staffId, String bedId) throws Exception {
+    // Discharge resident
+    public void dischargeResident(String staffId, String residentId) throws Exception {
         Staff s = getStaffById(staffId);
-        checkAuthorization(s, Role.DOCTOR, Role.NURSE, Role.MANAGER);
-
-        Bed bed = findBed(bedId);
-        if (bed.getResident() == null) {
-            throw new Exception("No resident in bed " + bedId);
-        }
-        log(staffId, "Viewed resident details for bed " + bedId);
-        return bed.getResident();
-    }
-
-    public void attachPrescription(String staffId, String bedId, Prescription prescription)
-            throws UnauthorizedActionException, NotOnDutyException, Exception {
-        Staff s = getStaffById(staffId);
-        checkAuthorization(s, Role.DOCTOR);
-
+        checkAuthorization(s, Role.MANAGER, Role.NURSE);
         checkOnDuty(s);
-
-        Bed bed = findBed(bedId);
-        if (bed.getResident() == null) {
-            throw new Exception("No resident in bed " + bedId);
+        Resident r = getResidentById(residentId);
+        r.setDischargeDate(LocalDate.now());
+        Prescription p = prescriptions.get(residentId);
+        // Remove from bed
+        Bed bed = findBedByResident(residentId);
+        if (bed != null) bed.removeResident();
+        residents.remove(r);
+        prescriptions.remove(residentId);
+        // Archive to DB
+        DBManager.archiveResident(r);
+        if (p != null) {
+            DBManager.archivePrescription(residentId, p);
+            for (Administration a : p.getAllAdministrations()) {
+                DBManager.archiveAdministration(residentId, a);
+            }
         }
-
-        prescriptions.put(bed.getResident().getResidentId(), prescription);
-        log(staffId, "Attached prescription for resident " + bed.getResident().getResidentId());
+        log(staffId, "Discharged resident " + residentId + " and archived to DB");
     }
 
-    public void updatePrescription(String staffId, String residentId, Medicine med, String dose, LocalTime time)
-            throws UnauthorizedActionException, NotOnDutyException, Exception {
-        Staff s = getStaffById(staffId);
+    // Prescription management
+    public void addPrescription(String doctorId, String residentId, Medicine medicine, String dose, LocalTime time) throws Exception {
+        Staff s = getStaffById(doctorId);
         checkAuthorization(s, Role.DOCTOR);
-
         checkOnDuty(s);
+        Resident r = getResidentById(residentId);
+        Prescription p = prescriptions.computeIfAbsent(residentId, k -> new Prescription(residentId));
+        p.addItem(medicine, dose, time);
+        log(doctorId, "Added prescription for resident " + residentId);
+    }
 
+    public Prescription getPrescription(String residentId) {
+        return prescriptions.get(residentId); // Consider defensive copy if modified
+    }
+
+    // Medication administration
+    public void recordAdministration(String nurseId, String residentId, Medicine medicine) throws Exception {
+        Staff s = getStaffById(nurseId);
+        checkAuthorization(s, Role.NURSE);
+        checkOnDuty(s);
         Prescription p = prescriptions.get(residentId);
         if (p == null) {
-            throw new IllegalArgumentException("No prescription found for resident " + residentId);
+            throw new Exception("No prescription exists for resident " + residentId);
         }
-        p.addItem(med, dose, time);
-        log(staffId, "Updated prescription for resident " + residentId + " with " + med.getName());
+        p.recordAdministration(medicine, LocalDateTime.now());
+        log(nurseId, "Administered medicine " + medicine.getName() + " to resident " + residentId);
     }
 
-    public void administerPrescription(String staffId, String residentId, Medicine med, String dose)
-            throws UnauthorizedActionException, NotOnDutyException, Exception {
-        Staff s = getStaffById(staffId);
-        checkAuthorization(s, Role.NURSE, Role.DOCTOR);
-
-        checkOnDuty(s);
-
-        Prescription p = prescriptions.get(residentId);
-        if (p == null) {
-            throw new IllegalArgumentException("No prescription for resident " + residentId);
-        }
-
-        LocalTime now = LocalTime.now();
-        log(staffId, "Administered " + dose + " of " + med.getName() + " to resident " + residentId + " at " + now);
+    // Compliance check
+    public void checkCompliance() throws Exception {
+        schedule.checkCompliance(); // Delegates to Schedule for nurse/doctor rules
     }
 
-    private Staff getStaffById(String staffId) throws Exception {
-        return staff.stream()
-                .filter(s -> s.getStaffId().equals(staffId))
-                .findFirst()
-                .orElseThrow(() -> new Exception("Staff not found: " + staffId));
-    }
-
-    private Bed findBed(String bedId) throws Exception {
+    // Find bed by ID
+    public Bed findBed(String bedId) {
         for (Ward w : wards) {
             for (Room r : w.getRooms()) {
                 for (Bed b : r.getBeds()) {
-                    if (b.getBedId().equals(bedId)) return b;
+                    if (b.getBedId().equals(bedId)) {
+                        return b;
+                    }
                 }
             }
         }
-        throw new Exception("Bed not found: " + bedId);
+        return null;
     }
 
-    private void checkAuthorization(Staff s, Role... allowed) throws UnauthorizedActionException {
-        for (Role role : allowed) {
-            if (s.getRole() == role) return;
+    // Find bed by resident
+    public Bed findBedByResident(String residentId) {
+        for (Ward w : wards) {
+            for (Room r : w.getRooms()) {
+                for (Bed b : r.getBeds()) {
+                    if (b.getResident() != null && b.getResident().getResidentId().equals(residentId)) {
+                        return b;
+                    }
+                }
+            }
         }
-        throw new UnauthorizedActionException("Staff " + s.getStaffId() + " not authorized for this action.");
+        return null;
     }
 
+    // Authorization check
+    private void checkAuthorization(Staff s, Role... allowedRoles) throws UnauthorizedActionException {
+        for (Role role : allowedRoles) {
+            if (s.getRole() == role) {
+                return;
+            }
+        }
+        throw new UnauthorizedActionException("Staff " + s.getStaffId() + " not authorized for this action");
+    }
+
+    // Duty check
     private void checkOnDuty(Staff s) throws NotOnDutyException {
-        LocalDateTime now = LocalDateTime.now();
-        DayOfWeek today = now.getDayOfWeek();
-        LocalTime time = now.toLocalTime();
-        if (!schedule.isOnDuty(s, today, time)) {
-            throw new NotOnDutyException("Staff " + s.getStaffId() + " is not on duty at this time.");
+        if (s.getRole() == Role.MANAGER) {
+            return; // Managers are always on duty (fixes M1 error)
+        }
+        if (!schedule.isOnDuty(s, LocalDate.now().getDayOfWeek(), LocalTime.now())) {
+            throw new NotOnDutyException("Staff " + s.getStaffId() + " is not on duty at this time");
         }
     }
 
-    public void checkCompliance() throws Exception {
-        schedule.checkCompliance();
-    }
-
+    // Serialization methods
     public void saveData(File file) throws IOException {
-        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file))) {
-            out.writeObject(this);
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
+            oos.writeObject(this);
         }
     }
 
     public static CareHome loadData(File file) throws IOException, ClassNotFoundException {
-        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))) {
-            instance = (CareHome) in.readObject();
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+            instance = (CareHome) ois.readObject();
             return instance;
         }
     }
 
+    // Public access to staff and resident by ID for GUI
+    public Staff getStaffById(String staffId) throws Exception {
+        return staff.stream()
+                .filter(s -> s.getStaffId().equals(staffId))
+                .findFirst()
+                .orElseThrow(() -> new Exception("Staff " + staffId + " not found"));
+    }
+
+    public Resident getResidentById(String residentId) throws Exception {
+        return residents.stream()
+                .filter(r -> r.getResidentId().equals(residentId))
+                .findFirst()
+                .orElseThrow(() -> new Exception("Resident " + residentId + " not found"));
+    }
+
+    // LogEntry inner class
     public static class LogEntry implements Serializable {
         private final String staffId;
         private final String action;
