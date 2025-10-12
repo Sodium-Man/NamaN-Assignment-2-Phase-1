@@ -234,7 +234,7 @@ public class MainTest {
         assertEquals("R1", resident.getResidentId());
         assertEquals("John Doe", resident.getName());
         assertEquals(Gender.M, resident.getGender());
-        assertEquals("Diabetes", resident.getMedicalCondition());
+        assertEquals("Diabetes", resident.getCondition());
     }
 
     @Test
