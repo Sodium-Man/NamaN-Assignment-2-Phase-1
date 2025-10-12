@@ -20,14 +20,34 @@ public abstract class Staff implements Serializable {
         this.role = Objects.requireNonNull(role);
     }
 
-    public String getStaffId() { return staffId; }
-    public String getName() { return name; }
-    public String getUsername() { return username; }
-    public Gender getGender() { return gender; }
-    public Role getRole() { return role; }
+    public String getStaffId() {
+        return staffId;
+    }
 
-    public void setPassword(String password) { this.password = password; }
-    public String getPassword() { return password; } // Added for login; secure with hashing in real systems
+    public String getName() {
+        return name;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public Gender getGender() {
+        return gender;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getPassword() {
+        return password;
+    } // Added for login; secure with hashing in real systems
+
     public abstract void displayInfo();
 
     @Override
