@@ -19,7 +19,7 @@ public class Ward implements Serializable {
     public String getWardName() { return wardName; }  // Add this method
     public List<Room> getRooms() { return rooms; }
 
-    // Add other Ward-specific methods here
+    // Add other Ward-specific methods heree
     public void addRoom(Room room) {
         rooms.add(room);
     }
