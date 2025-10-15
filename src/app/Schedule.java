@@ -34,9 +34,6 @@ public class Schedule implements Serializable {
         return shifts.getOrDefault(staff.getStaffId(), new ArrayList<>());
     }
 
-    /**
-     * Check if a staff member is currently on duty at the given day+time.
-     */
     public boolean isOnDuty(Staff staff, DayOfWeek day, LocalTime time) {
         List<Shift> staffShifts = getShiftsForStaff(staff);
         for (Shift s : staffShifts) {
@@ -49,10 +46,6 @@ public class Schedule implements Serializable {
         return false;
     }
 
-    /**
-     * Enforce compliance rules (e.g., maximum shift length).
-     * Throws Exception if rules are violated.
-     */
     public void checkCompliance() throws Exception {
         for (Map.Entry<String, List<Shift>> entry : shifts.entrySet()) {
             for (Shift s : entry.getValue()) {
@@ -63,9 +56,6 @@ public class Schedule implements Serializable {
         }
     }
 
-    /**
-     * Return all shifts assigned to nurses
-     */
     public List<Shift> getAllNurseShifts() {
         List<Shift> nurseShifts = new ArrayList<>();
         for (Map.Entry<String, List<Shift>> entry : shifts.entrySet()) {
@@ -78,23 +68,14 @@ public class Schedule implements Serializable {
         return nurseShifts;
     }
 
-    /**
-     * Set doctor availability for a specific day
-     */
     public void setDoctorPresent(DayOfWeek day, boolean present) {
         doctorAvailability.put(day, present);
     }
 
-    /**
-     * Check if doctor is available for a specific day
-     */
     public boolean isDoctorPresent(DayOfWeek day) {
         return doctorAvailability.getOrDefault(day, false);
     }
 
-    /**
-     * Optional helper: return all shifts
-     */
     public List<Shift> getAllShifts() {
         List<Shift> all = new ArrayList<>();
         for (List<Shift> list : shifts.values()) {

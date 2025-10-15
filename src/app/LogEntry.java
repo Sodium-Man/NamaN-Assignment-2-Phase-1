@@ -3,9 +3,6 @@ package app;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-/**
- * Represents a single action log in the care home system.
- */
 public class LogEntry implements Serializable {
     private final String staffId;
     private final String action;

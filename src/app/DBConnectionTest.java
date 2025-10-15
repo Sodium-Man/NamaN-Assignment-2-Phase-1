@@ -10,7 +10,6 @@ public class DBConnectionTest {
     public static void main(String[] args) {
         Connection conn = null;
         try {
-            // Load the SQLite driver explicitly (though usually auto-loaded)
             Class.forName("org.sqlite.JDBC");
             conn = DriverManager.getConnection(DB_URL);
             if (conn != null) {
