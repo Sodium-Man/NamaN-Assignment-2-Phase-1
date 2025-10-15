@@ -27,10 +27,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Modernized JavaFX App - Tab-based UI with embedded CSS (blue-white theme).
- * Keep existing CareHome backend intact.
- */
 public class App extends Application {
     private final CareHome ch = CareHome.getInstance();
     private Staff currentStaff;
@@ -38,14 +34,12 @@ public class App extends Application {
     private Label statusLabel = new Label();
     private final DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm:ss");
 
-    // Will hold path to temp CSS file (embedded stylesheet)
     private Path embeddedCssFile;
 
     @Override
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
 
-        // Write embedded stylesheet to a temp file and register it
         try {
             embeddedCssFile = writeEmbeddedCss();
         } catch (IOException e) {
@@ -53,7 +47,6 @@ public class App extends Application {
             embeddedCssFile = null;
         }
 
-        // Auto-save on exit (PDF requirement)
         primaryStage.setOnCloseRequest(e -> {
             try {
                 ch.saveData(new File("carehome.ser"));
@@ -93,7 +86,6 @@ public class App extends Application {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("root");
 
-        // Header - Title + (optional) logo placeholder
         VBox header = new VBox(6);
         header.setAlignment(Pos.CENTER);
         Label title = new Label("CareHome Management System");
@@ -218,7 +210,6 @@ public class App extends Application {
                 return createLoginScene();
             }
 
-            // Use a VBox with a FlowPane for responsive bed cards
             VBox wardBox = new VBox(12);
             wardBox.setPadding(new Insets(15));
 
@@ -271,7 +262,7 @@ public class App extends Application {
             tabPane.getTabs().add(tab);
         }
 
-        // Additional tabs: Staff / Logs (quick access)
+        // Additional tabs: Staff / Logs
         Tab staffTab = new Tab("Staff");
         staffTab.setContent(createStaffOverview());
         tabPane.getTabs().add(staffTab);
