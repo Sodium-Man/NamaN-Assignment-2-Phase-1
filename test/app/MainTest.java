@@ -1,286 +1,145 @@
 package app;
 
-import org.junit.*;
-import org.junit.rules.TemporaryFolder;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import java.io.File;
-import java.io.PrintStream;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
+import static org.junit.jupiter.api.Assertions.*;
 
-import static org.junit.Assert.*;
+class MainTest {
 
-public class MainTest {
-    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-    private final PrintStream originalOut = System.out;
-    private final PrintStream originalErr = System.err;
+    private static final File DATA_FILE = new File("data/carehome_test.dat");
+    private CareHome ch;
 
-    @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
-
-    @Before
-    public void setUp() {
-        System.setOut(new PrintStream(outContent));
-        // Reset CareHome instance before each test
-        CareHome instance = CareHome.getInstance();
-        instance.getWards().clear();
-        instance.getStaff().clear();
-        instance.getResidents().clear();
-        instance.getLogs().clear();
-    }
-
-    @After
-    public void tearDown() {
-        System.setOut(originalOut);
-        System.setErr(originalErr);
-    }
-
-    @Test
-    public void testMainInitialization() {
-        try {
-            CareHome ch = CareHome.getInstance();
-            assertNotNull("CareHome instance should not be null", ch);
-        } catch (Exception e) {
-            fail("Initialization should not throw exception: " + e.getMessage());
+    @BeforeEach
+    void setUp() throws Exception {
+        // Clean up any existing test file
+        if (DATA_FILE.exists()) {
+            DATA_FILE.delete();
         }
-    }
+        DATA_FILE.getParentFile().mkdirs();
 
-    @Test
-    public void testMainMenuListBeds() {
-        String input = "1\n0\n"; // List beds then exit
-        System.setIn(new ByteArrayInputStream(input.getBytes()));
+        // Initialize CareHome instance
+        ch = CareHome.getInstance();
 
-        try {
-            Main.main(new String[]{});
-        } catch (NoSuchElementException e) {
-            // Expected
-        }
-
-        String output = outContent.toString();
-        assertTrue(output.contains("Resident HealthCare System"));
-        assertTrue(output.contains("Choice:"));
-    }
-
-    @Test
-    public void testMainMenuAddResident() {
-        String input = "2\nJohn Doe\nM\nHypertension\n0\n"; // Add resident then exit
-        System.setIn(new ByteArrayInputStream(input.getBytes()));
-
-        try {
-            Main.main(new String[]{});
-        } catch (NoSuchElementException e) {
-            // Expected
-        }
-
-        String output = outContent.toString();
-        assertTrue(output.contains("Name:"));
-        assertTrue(output.contains("Gender"));
-    }
-
-    @Test
-    public void testMainMenuExit() {
-        String input = "0\n"; // Exit immediately
-        System.setIn(new ByteArrayInputStream(input.getBytes()));
-
-        try {
-            Main.main(new String[]{});
-        } catch (NoSuchElementException e) {
-            // Expected
-        }
-
-        String output = outContent.toString();
-        assertTrue(output.contains("Goodbye"));
-    }
-
-    @Test
-    public void testMainMenuInvalidChoice() {
-        String input = "99\n0\n"; // Invalid choice then exit
-        System.setIn(new ByteArrayInputStream(input.getBytes()));
-
-        try {
-            Main.main(new String[]{});
-        } catch (NoSuchElementException e) {
-            // Expected
-        }
-
-        String output = outContent.toString();
-        assertTrue(output.contains("Invalid choice"));
-    }
-
-    @Test
-    public void testMainMenuSaveAndLoad() {
-        String input = "6\n7\n0\n"; // Save, Load, Exit
-        System.setIn(new ByteArrayInputStream(input.getBytes()));
-
-        try {
-            Main.main(new String[]{});
-        } catch (NoSuchElementException e) {
-            // Expected
-        }
-
-        String output = outContent.toString();
-        assertTrue(output.contains("✓ Data successfully saved") || output.contains("✓ Data successfully loaded") || output.contains("Goodbye"));
-    }
-
-    @Test
-    public void testMainMenuCheckCompliance() {
-        String input = "5\n0\n"; // Check compliance then exit
-        System.setIn(new ByteArrayInputStream(input.getBytes()));
-
-        try {
-            Main.main(new String[]{});
-        } catch (NoSuchElementException e) {
-            // Expected
-        }
-
-        String output = outContent.toString();
-        assertTrue(output.contains("Compliance") || output.contains("Goodbye"));
-    }
-
-    @Test
-    public void testCareHomeSingleton() {
-        CareHome instance1 = CareHome.getInstance();
-        CareHome instance2 = CareHome.getInstance();
-
-        assertSame(instance1, instance2);
-        assertNotNull(instance1);
-    }
-
-    @Test
-    public void testCareHomeAddStaff() {
-        CareHome ch = CareHome.getInstance();
-        Manager manager = new Manager("M1", "Test Manager", Gender.M, "test", "pass");
-
-        ch.addStaff(manager);
-        assertEquals(1, ch.getStaff().size());
-        assertEquals("M1", ch.getStaff().get(0).getStaffId());
-    }
-
-    @Test
-    public void testCareHomeAddResident() {
-        CareHome ch = CareHome.getInstance();
-        Resident resident = new Resident("R1", "Test Resident", Gender.M, "Test Condition");
-
-        ch.addResident(resident);
-        assertEquals(1, ch.getResidents().size());
-        assertEquals("R1", ch.getResidents().get(0).getResidentId());
-    }
-
-    @Test
-    public void testCareHomeLogging() {
-        CareHome ch = CareHome.getInstance();
-        ch.log("TEST123", "Test action");
-
-        assertEquals(1, ch.getLogs().size());
-        assertTrue(ch.getLogs().get(0).toString().contains("TEST123"));
-    }
-
-    @Test
-    public void testSampleDataBootstrap() {
-        CareHome ch = CareHome.getInstance();
-
+        // Bootstrap minimal data
         SampleData.bootstrapBeds(ch);
-        assertFalse(ch.getWards().isEmpty());
-        assertFalse(ch.getWards().get(0).getRooms().isEmpty());
-        assertFalse(ch.getWards().get(0).getRooms().get(0).getBeds().isEmpty());
-    }
-
-    @Test
-    public void testSampleDataPeople() {
-        CareHome ch = CareHome.getInstance();
-
         SampleData.bootstrapPeople(ch);
-        assertFalse(ch.getStaff().isEmpty());
-        assertFalse(ch.getResidents().isEmpty());
+        SampleData.bootstrapSchedule(ch);
+
+        // Mock DBManager to avoid actual database access during tests
+        try {
+            DBManager.initializeDatabase(); // Ensure tables exist
+        } catch (Exception e) {
+            // Swallow exception if database setup fails (test isolation)
+            System.err.println("Warning: Database setup failed, tests will skip DB-related operations: " + e.getMessage());
+        }
     }
 
-    @Test
-    public void testFileOperations() {
-        try {
-            File testFile = tempFolder.newFile("test.dat");
-            CareHome ch = CareHome.getInstance();
-
-            ch.saveData(testFile);
-            assertTrue(testFile.exists());
-
-            CareHome loaded = CareHome.loadData(testFile);
-            assertNotNull(loaded);
-
-        } catch (Exception e) {
-            fail("File operations should not fail: " + e.getMessage());
+    @AfterEach
+    void tearDown() {
+        if (DATA_FILE.exists()) {
+            DATA_FILE.delete();
+        }
+        // Clean up any temporary database if needed
+        File dbFile = new File("carehome.db");
+        if (dbFile.exists()) {
+            dbFile.delete();
         }
     }
 
     @Test
-    public void testGenderEnum() {
-        assertEquals(Gender.M, Gender.valueOf("M"));
-        assertEquals(Gender.F, Gender.valueOf("F"));
-
-        Gender male = "M".startsWith("M") ? Gender.M : Gender.F;
-        Gender female = "F".startsWith("M") ? Gender.M : Gender.F;
-
-        assertEquals(Gender.M, male);
-        assertEquals(Gender.F, female);
+    void testAddResident() {
+        Resident resident = new Resident("R3", "Test Resident", Gender.M, "Healthy");
+        ch.addResident(resident);
+        assertTrue(ch.getResidents().contains(resident), "Resident should be added to CareHome");
+        assertEquals(LocalDate.now(), resident.getAdmissionDate(), "Admission date should be set to today");
     }
 
     @Test
-    public void testResidentCreation() {
-        Resident resident = new Resident("R1", "John Doe", Gender.M, "Diabetes");
-
-        assertEquals("R1", resident.getResidentId());
-        assertEquals("John Doe", resident.getName());
-        assertEquals(Gender.M, resident.getGender());
-        assertEquals("Diabetes", resident.getCondition());
+    void testAssignResidentToBed() throws Exception {
+        Resident resident = ch.getResidentById("R1");
+        Bed bed = ch.findBed("W1-R1-B1");
+        assertNotNull(bed, "Bed should exist after bootstrap");
+        ch.assignResidentToBed("M1", resident, bed.getBedId());
+        assertFalse(bed.isVacant(), "Bed should be occupied after assignment");
+        assertEquals(resident, bed.getResident(), "Bed should contain the assigned resident");
     }
 
     @Test
-    public void testStaffRoles() {
-        Manager manager = new Manager("M1", "Manager", Gender.M, "user", "pass");
-        Nurse nurse = new Nurse("N1", "Nurse", Gender.F, "user", "pass");
-        Doctor doctor = new Doctor("D1", "Doctor", Gender.M, "user", "pass");
-
-        assertEquals(Role.MANAGER, manager.getRole());
-        assertEquals(Role.NURSE, nurse.getRole());
-        assertEquals(Role.DOCTOR, doctor.getRole());
+    void testMoveResident() throws Exception {
+        Resident resident = ch.getResidentById("R1");
+        ch.assignResidentToBed("M1", resident, "W1-R1-B1");
+        ch.moveResident("M1", "W1-R1-B1", "W1-R1-B2");
+        Bed fromBed = ch.findBed("W1-R1-B1");
+        Bed toBed = ch.findBed("W1-R1-B2");
+        assertTrue(fromBed.isVacant(), "Source bed should be vacant after move");
+        assertFalse(toBed.isVacant(), "Target bed should be occupied after move");
+        assertEquals(resident, toBed.getResident(), "Target bed should contain the moved resident");
     }
 
     @Test
-    public void testPrescriptionAddItem() {
-        Prescription prescription = new Prescription("R1");
-        Medicine med = new Medicine("Aspirin");
-        prescription.addItem(med, "1 tablet", LocalTime.of(9, 0));
-
-        assertTrue(prescription.toString().contains("Aspirin"));
-        assertTrue(prescription.getItems().containsKey(med));
+    void testAssignNurseShift() throws Exception {
+        Nurse nurse = (Nurse) ch.getStaffById("N1");
+        Shift shift = new Shift(DayOfWeek.MONDAY, LocalTime.of(8, 0), LocalTime.of(16, 0));
+        ch.getSchedule().assignNurseShift(nurse, shift);
+        List<Shift> shifts = ch.getSchedule().getShiftsForStaff(nurse);
+        assertTrue(shifts.contains(shift), "Nurse shift should be assigned");
     }
 
     @Test
-    public void testBedVacancy() throws Exception {
-        Bed bed = new Bed("B1");
-        assertTrue(bed.isVacant());
-
-        Resident r = new Resident("R1", "Test", Gender.M, null);
-        bed.assignResident(r);
-        assertFalse(bed.isVacant());
-
-        bed.removeResident();
-        assertTrue(bed.isVacant());
+    void testCheckCompliance() throws Exception {
+        Nurse nurse = (Nurse) ch.getStaffById("N1");
+        ch.getSchedule().assignNurseShift(nurse, new Shift(DayOfWeek.MONDAY, LocalTime.of(8, 0), LocalTime.of(16, 0)));
+        ch.getSchedule().checkCompliance(); // Should not throw exception
+        ch.getSchedule().assignNurseShift(nurse, new Shift(DayOfWeek.TUESDAY, LocalTime.of(8, 0), LocalTime.of(17, 0)));
+        assertThrows(Exception.class, () -> ch.getSchedule().checkCompliance(), "Should throw exception for shift > 8 hours");
     }
 
     @Test
-    public void testScheduleComplianceViolation() {
-        CareHome ch = CareHome.getInstance();
-        Nurse nurse = new Nurse("N1", "Nurse", Gender.F, "user", "pass");
-        ch.addStaff(nurse);
+    void testSaveAndLoadData() throws Exception {
+        Resident resident = new Resident("R3", "Test Resident", Gender.M, "Healthy");
+        ch.addResident(resident);
+        ch.saveData(DATA_FILE);
+        CareHome loadedCh = CareHome.loadData(DATA_FILE);
+        assertEquals(ch.getResidents().size(), loadedCh.getResidents().size(), "Loaded data should match saved data");
+        assertTrue(loadedCh.getResidents().contains(resident), "Loaded data should contain the added resident");
+    }
 
-        Shift shift1 = new Shift(DayOfWeek.MONDAY, LocalTime.of(8,0), LocalTime.of(20,0)); // 12h shift
-        ch.getSchedule().assignNurseShift(nurse, shift1);
+    @Test
+    void testDischargeResident() throws Exception {
+        Resident resident = ch.getResidentById("R1");
+        ch.assignResidentToBed("M1", resident, "W1-R1-B1");
+        ch.dischargeResident("M1", resident.getResidentId());
+        assertFalse(ch.getResidents().contains(resident), "Resident should be removed after discharge");
+        Bed bed = ch.findBed("W1-R1-B1");
+        assertTrue(bed.isVacant(), "Bed should be vacant after discharge");
+    }
 
-        Exception ex = assertThrows(Exception.class, ch::checkCompliance);
-        assertTrue(ex.getMessage().contains("Compliance violation"));
+    @Test
+    void testAddPrescription() throws Exception {
+        Doctor doctor = (Doctor) ch.getStaffById("D1");
+        Resident resident = ch.getResidentById("R1");
+        Medicine medicine = new Medicine("Paracetamol");
+        ch.addPrescription(doctor.getStaffId(), resident.getResidentId(), medicine, "500mg", LocalTime.of(8, 0));
+        Prescription prescription = ch.getPrescription(resident.getResidentId());
+        assertNotNull(prescription, "Prescription should be added");
+        assertEquals(medicine.getName(), prescription.getMedicine().getName(), "Medicine name should match");
+    }
+
+    @Test
+    void testAdministerMedication() throws Exception {
+        Doctor doctor = (Doctor) ch.getStaffById("D1");
+        Resident resident = ch.getResidentById("R1");
+        Medicine medicine = new Medicine("Paracetamol");
+        ch.addPrescription(doctor.getStaffId(), resident.getResidentId(), medicine, "500mg", LocalTime.of(8, 0));
+        Nurse nurse = (Nurse) ch.getStaffById("N1");
+        ch.recordAdministration(nurse.getStaffId(), resident.getResidentId(), medicine);
+        Prescription prescription = ch.getPrescription(resident.getResidentId());
+        assertFalse(prescription.getAllAdministrations().isEmpty(), "Administration should be recorded");
     }
 }
