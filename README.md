@@ -6,6 +6,8 @@ It demonstrates Object-Oriented Design principles, JavaFX GUI, collections, exce
 
 The system supports management of residents, staff, wards, and prescriptions through a clean, modern GUI interface and console fallback.
 
+Github Link: https://github.com/COSC1295-advanced-programming-2025-s2/cosc1295-assignment-2-semester-2-2025-Sodium-Man
+
 ---
 
 ## 🏗 Features
