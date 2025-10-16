@@ -185,8 +185,7 @@ public class Main {
         System.out.println("\nDoctors:");
         ch.getStaff().stream().filter(s -> s instanceof Doctor).forEach(s -> System.out.println("  " + s.getStaffId() + " - " + s.getName()));
     }
-
-    // New methods
+    
     private static void addStaff(CareHome ch, Scanner sc) {
         System.out.print("Role (MANAGER/DOCTOR/NURSE): ");
         Role role = Role.valueOf(sc.nextLine().trim().toUpperCase());
