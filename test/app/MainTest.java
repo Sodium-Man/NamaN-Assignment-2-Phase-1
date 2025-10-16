@@ -108,6 +108,42 @@ class MainTest {
         CareHome loadedCh = CareHome.loadData(DATA_FILE);
         assertEquals(ch.getResidents().size(), loadedCh.getResidents().size(), "Loaded data should match saved data");
         assertTrue(loadedCh.getResidents().contains(resident), "Loaded data should contain the added resident");
+<<<<<<< HEAD
+=======
+    }
+
+    @Test
+    void testDischargeResident() throws Exception {
+        Resident resident = ch.getResidentById("R1");
+        ch.assignResidentToBed("M1", resident, "W1-R1-B1");
+        ch.dischargeResident("M1", resident.getResidentId());
+        assertFalse(ch.getResidents().contains(resident), "Resident should be removed after discharge");
+        Bed bed = ch.findBed("W1-R1-B1");
+        assertTrue(bed.isVacant(), "Bed should be vacant after discharge");
+    }
+
+    @Test
+    void testAddPrescription() throws Exception {
+        Doctor doctor = (Doctor) ch.getStaffById("D1");
+        Resident resident = ch.getResidentById("R1");
+        Medicine medicine = new Medicine("Paracetamol");
+        ch.addPrescription(doctor.getStaffId(), resident.getResidentId(), medicine, "500mg", LocalTime.of(8, 0));
+        Prescription prescription = ch.getPrescription(resident.getResidentId());
+        assertNotNull(prescription, "Prescription should be added");
+        assertEquals(medicine.getName(), prescription.getMedicine().getName(), "Medicine name should match");
+    }
+
+    @Test
+    void testAdministerMedication() throws Exception {
+        Doctor doctor = (Doctor) ch.getStaffById("D1");
+        Resident resident = ch.getResidentById("R1");
+        Medicine medicine = new Medicine("Paracetamol");
+        ch.addPrescription(doctor.getStaffId(), resident.getResidentId(), medicine, "500mg", LocalTime.of(8, 0));
+        Nurse nurse = (Nurse) ch.getStaffById("N1");
+        ch.recordAdministration(nurse.getStaffId(), resident.getResidentId(), medicine);
+        Prescription prescription = ch.getPrescription(resident.getResidentId());
+        assertFalse(prescription.getAllAdministrations().isEmpty(), "Administration should be recorded");
+>>>>>>> 98080c54399d118081e01f5d394968f2fc68148c
     }
 
     @Test
