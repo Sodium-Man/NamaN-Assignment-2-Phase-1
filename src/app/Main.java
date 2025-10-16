@@ -185,7 +185,7 @@ public class Main {
         System.out.println("\nDoctors:");
         ch.getStaff().stream().filter(s -> s instanceof Doctor).forEach(s -> System.out.println("  " + s.getStaffId() + " - " + s.getName()));
     }
-    
+
     private static void addStaff(CareHome ch, Scanner sc) {
         System.out.print("Role (MANAGER/DOCTOR/NURSE): ");
         Role role = Role.valueOf(sc.nextLine().trim().toUpperCase());
@@ -218,6 +218,7 @@ public class Main {
         System.out.println("✓ Password updated!");
     }
 
+    //revert changes
     private static void addPrescription(CareHome ch, Scanner sc) throws Exception {
         System.out.print("Doctor ID: ");
         String docId = sc.nextLine().trim();
