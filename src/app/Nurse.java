@@ -5,7 +5,6 @@ public class Nurse extends Staff {
         super(staffId, name, gender, username, password, Role.NURSE);
     }
     
-    //testing
     @Override
     public void displayInfo() {
         System.out.println("Nurse: " + name + " (ID: " + staffId + ")");
